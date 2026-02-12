@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { User, auth } from "@/lib/auth";
+import { User } from "@/lib/auth";
 import { db, Plan, DailyLog, DailyPlan } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -10,10 +10,6 @@ import { useRouter } from "next/navigation";
 
 // Next.js 15+ Params are async
 export default function CoachMemberDetail({ params }: { params: Promise<{ id: string }> }) {
-    // Use `use` unwrapping if needed or await in async component. 
-    // For client component with standard params, we can just use `use` or await.
-    // Actually in Next 15 `params` is a Promise. But let's check `use` hook usage or state.
-    // I will assume standard usage for "use client" where I need to unwrap.
     const [memberId, setMemberId] = useState<string>("");
     const [member, setMember] = useState<User | null>(null);
     const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
@@ -29,63 +25,77 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
 
     useEffect(() => {
         // Unwrap params
-        params.then(p => {
+        params.then(async (p) => {
             setMemberId(p.id);
-            const u = auth.getUsers().find(user => user.id === p.id);
+            const u = await db.getUserById(p.id);
             if (u) setMember(u);
 
-            const plan = db.getPlanByMemberId(p.id);
+            const plan = await db.getPlanByMemberId(p.id);
             if (plan) setCurrentPlan(plan);
 
-            setLogs(db.getLogsByMemberId(p.id).sort((a, b) => b.date.localeCompare(a.date)));
+            const fetchedLogs = await db.getLogsByMemberId(p.id);
+            setLogs(fetchedLogs.sort((a, b) => b.date.localeCompare(a.date)));
         });
     }, [params]);
 
     useEffect(() => {
-        if (memberId && selectedDate) {
-            const plan = db.getDailyPlan(memberId, selectedDate);
-            setDailyPlan(plan);
-            setDailyDiet(plan?.dietGuide || "");
-            setDailyRoutine(plan?.routine || "");
-        }
+        const loadDailyData = async () => {
+            if (memberId && selectedDate) {
+                const plan = await db.getDailyPlan(memberId, selectedDate);
+                setDailyPlan(plan);
+                setDailyDiet(plan?.dietGuide || "");
+                setDailyRoutine(plan?.routine || "");
+            }
+        };
+        loadDailyData();
     }, [memberId, selectedDate]);
 
-    const handleCreatePlan = (e: React.FormEvent) => {
+    const handleCreatePlan = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!memberId || !member?.coachId) return;
 
-        db.createPlan({
-            coachId: member.coachId,
-            memberId: memberId,
-            startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 weeks default
-            dietGuide,
-            routine
-        });
+        try {
+            await db.createPlan({
+                coachId: member.coachId,
+                memberId: memberId,
+                startDate: new Date().toISOString().split('T')[0],
+                endDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 weeks default
+                dietGuide,
+                routine
+            });
 
-        alert("기본 플랜이 생성되었습니다.");
-        // Refresh
-        const plan = db.getPlanByMemberId(memberId);
-        if (plan) setCurrentPlan(plan);
-        setDietGuide("");
-        setRoutine("");
+            alert("기본 플랜이 생성되었습니다.");
+            // Refresh
+            const plan = await db.getPlanByMemberId(memberId);
+            if (plan) setCurrentPlan(plan);
+            setDietGuide("");
+            setRoutine("");
+        } catch (error) {
+            console.error(error);
+            alert("플랜 생성 중 오류가 발생했습니다.");
+        }
     };
 
-    const handleSaveDaily = (e: React.FormEvent) => {
+    const handleSaveDaily = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!memberId) return;
 
-        db.createDailyPlan({
-            memberId,
-            date: selectedDate,
-            dietGuide: dailyDiet,
-            routine: dailyRoutine
-        });
+        try {
+            await db.createDailyPlan({
+                memberId,
+                date: selectedDate,
+                dietGuide: dailyDiet,
+                routine: dailyRoutine
+            });
 
-        alert(`${selectedDate}의 플랜이 저장되었습니다.`);
-        // Refresh state
-        const plan = db.getDailyPlan(memberId, selectedDate);
-        setDailyPlan(plan);
+            alert(`${selectedDate}의 플랜이 저장되었습니다.`);
+            // Refresh state
+            const plan = await db.getDailyPlan(memberId, selectedDate);
+            setDailyPlan(plan);
+        } catch (error) {
+            console.error(error);
+            alert("저장 중 오류가 발생했습니다.");
+        }
     };
 
     const [showDefaults, setShowDefaults] = useState(false);
@@ -107,6 +117,11 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
     };
 
     if (!member) return <div style={{ padding: '24px' }}>Loading...</div>;
+
+    const refreshLogs = async () => {
+        const fetchedLogs = await db.getLogsByMemberId(memberId);
+        setLogs(fetchedLogs.sort((a, b) => b.date.localeCompare(a.date)));
+    };
 
     return (
         <div style={{ padding: '24px', paddingBottom: '100px' }}>
@@ -308,7 +323,7 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
             <h3 style={{ fontWeight: '600', marginBottom: '16px', marginTop: '32px' }}>활동 기록 및 피드백 (전체)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
                 {logs.map(log => (
-                    <LogItem key={log.id} log={log} onUpdate={() => setLogs(db.getLogsByMemberId(memberId).sort((a, b) => b.date.localeCompare(a.date)))} />
+                    <LogItem key={log.id} log={log} onUpdate={refreshLogs} />
                 ))}
                 {logs.length === 0 && <p style={{ color: 'var(--color-text-tertiary)' }}>아직 활동 기록이 없습니다.</p>}
             </div>
@@ -321,11 +336,16 @@ function LogItem({ log, onUpdate }: { log: DailyLog, onUpdate: () => void }) {
     const [score, setScore] = useState(log.score || 5);
     const [isEditing, setIsEditing] = useState(!log.feedback);
 
-    const handleSave = () => {
-        db.updateLog(log.id, { feedback, score });
-        setIsEditing(false);
-        alert("피드백이 저장되었습니다.");
-        onUpdate();
+    const handleSave = async () => {
+        try {
+            await db.updateLog(log.id, { feedback, score });
+            setIsEditing(false);
+            alert("피드백이 저장되었습니다.");
+            onUpdate();
+        } catch (error) {
+            console.error(error);
+            alert("피드백 저장 실패");
+        }
     };
 
     return (

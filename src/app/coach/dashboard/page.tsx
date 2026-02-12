@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { User, auth } from "@/lib/auth";
+import { User } from "@/lib/auth";
+import { db } from "@/lib/data"; // Use db instead of auth
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -20,18 +21,23 @@ export default function CoachDashboard() {
         }
     }, [user]);
 
-    const loadMembers = () => {
+    const loadMembers = async () => {
         if (user?.id) {
-            setMembers(auth.getMembersByCoachId(user.id));
+            try {
+                const fetchedMembers = await db.getMembersByCoachId(user.id);
+                setMembers(fetchedMembers);
+            } catch (err) {
+                console.error("Failed to load members", err);
+            }
         }
     };
 
-    const handleAddMember = (e: React.FormEvent) => {
+    const handleAddMember = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user?.id) return;
 
         try {
-            auth.linkMember(user.id, newMemberCode.trim());
+            await db.linkMember(user.id, newMemberCode.trim());
             setNewMemberCode("");
             setIsAdding(false);
             loadMembers();

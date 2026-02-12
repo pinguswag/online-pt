@@ -28,6 +28,8 @@ export default function MemberDashboard() {
     const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
     const [dayCount, setDayCount] = useState<string>("-");
 
+    const [allLogs, setAllLogs] = useState<DailyLog[]>([]);
+
     // Logging State
     const [todayLog, setTodayLog] = useState<DailyLog | null>(null);
     const [routineChecked, setRoutineChecked] = useState(false);
@@ -35,70 +37,82 @@ export default function MemberDashboard() {
     const [dietImages, setDietImages] = useState<string[]>([]);
 
     // Helpers to refresh data
-    const refreshData = () => {
+    const refreshData = async () => {
         if (!user?.id) return;
 
-        const logs = db.getLogsByMemberId(user.id);
-        const plan = db.getPlanByMemberId(user.id);
-        setCurrentPlan(plan);
+        try {
+            const [logs, plan] = await Promise.all([
+                db.getLogsByMemberId(user.id),
+                db.getPlanByMemberId(user.id)
+            ]);
 
-        // Gamification
-        const streak = gamification.calculateStreak(logs);
-        const totalXp = logs.reduce((acc, log) => acc + 10 + (log.score || 0), 0);
-        const levelInfo = gamification.calculateLevel(totalXp);
-        const userBadges = gamification.getBadges(logs);
+            setAllLogs(logs); // Cache logs
+            setCurrentPlan(plan);
 
-        setStats({
-            streak,
-            level: levelInfo.currentLevel,
-            nextLevelXp: levelInfo.nextLevelXp,
-            currentXp: totalXp,
-            progress: levelInfo.progress
-        });
-        setBadges(userBadges);
+            // Gamification
+            const streak = gamification.calculateStreak(logs);
+            const totalXp = logs.reduce((acc, log) => acc + 10 + (log.score || 0), 0);
+            const levelInfo = gamification.calculateLevel(totalXp);
+            const userBadges = gamification.getBadges(logs);
+
+            setStats({
+                streak,
+                level: levelInfo.currentLevel,
+                nextLevelXp: levelInfo.nextLevelXp,
+                currentXp: totalXp,
+                progress: levelInfo.progress
+            });
+            setBadges(userBadges);
+        } catch (error) {
+            console.error("Dashboard refresh error:", error);
+        }
     };
 
     useEffect(() => {
         refreshData();
     }, [user]);
 
+    // Optimize: Update daily view from cached logs when date changes
     useEffect(() => {
-        if (user?.id && selectedDate) {
-            const dPlan = db.getDailyPlan(user.id, selectedDate);
-            setDailyPlan(dPlan);
+        const updateDailyView = async () => {
+            if (user?.id && selectedDate) {
+                // 1. Get Daily Plan (Network call - inevitable unless we cache plans too)
+                const dPlan = await db.getDailyPlan(user.id, selectedDate);
+                setDailyPlan(dPlan);
 
-            // Fetch Log for selected date
-            const logs = db.getLogsByMemberId(user.id);
-            const log = logs.find(l => l.date === selectedDate);
-            setTodayLog(log || null);
-            setRoutineChecked(log ? log.routineChecked : false);
-            setMemoir(log ? log.memoir : "");
-            setDietImages(log ? (log.dietImages || []) : []);
+                // 2. Get Log from Cache (Instant)
+                const log = allLogs.find(l => l.date === selectedDate);
+                setTodayLog(log || null);
+                setRoutineChecked(log ? log.routineChecked : false);
+                setMemoir(log ? log.memoir : "");
+                setDietImages(log ? (log.dietImages || []) : []);
 
-            // Calculate Day Count
-            if (currentPlan) {
-                const start = new Date(currentPlan.startDate);
-                const current = new Date(selectedDate);
-                const diffTime = current.getTime() - start.getTime();
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                // Calculate Day Count
+                if (currentPlan) {
+                    const start = new Date(currentPlan.startDate);
+                    const current = new Date(selectedDate);
+                    const diffTime = current.getTime() - start.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-                // Total duration
-                const end = new Date(currentPlan.endDate);
-                const totalDiff = end.getTime() - start.getTime();
-                const totalDays = Math.ceil(totalDiff / (1000 * 60 * 60 * 24)) + 1;
+                    // Total duration
+                    const end = new Date(currentPlan.endDate);
+                    const totalDiff = end.getTime() - start.getTime();
+                    const totalDays = Math.ceil(totalDiff / (1000 * 60 * 60 * 24)) + 1;
 
-                if (diffDays > 0 && diffDays <= totalDays) {
-                    setDayCount(`${diffDays}일차 / ${totalDays}일`);
-                } else if (diffDays <= 0) {
-                    setDayCount("시작 전");
+                    if (diffDays > 0 && diffDays <= totalDays) {
+                        setDayCount(`${diffDays}일차 / ${totalDays}일`);
+                    } else if (diffDays <= 0) {
+                        setDayCount("시작 전");
+                    } else {
+                        setDayCount("종료됨");
+                    }
                 } else {
-                    setDayCount("종료됨");
+                    setDayCount("플랜 없음");
                 }
-            } else {
-                setDayCount("플랜 없음");
             }
-        }
-    }, [user, selectedDate, currentPlan]);
+        };
+        updateDailyView();
+    }, [user, selectedDate, currentPlan, allLogs]);
 
     const moveDate = (days: number) => {
         const d = new Date(selectedDate);
@@ -124,7 +138,7 @@ export default function MemberDashboard() {
         setDietImages(newImages);
     };
 
-    const handleSaveLog = () => {
+    const handleSaveLog = async () => {
         if (!user) return;
 
         const logData = {
@@ -135,18 +149,23 @@ export default function MemberDashboard() {
             dietImages
         };
 
-        if (todayLog) {
-            db.updateLog(todayLog.id, { routineChecked, memoir, dietImages });
-        } else {
-            db.createLog(logData);
-        }
+        try {
+            if (todayLog) {
+                await db.updateLog(todayLog.id, { routineChecked, memoir, dietImages });
+            } else {
+                await db.createLog(logData);
+            }
 
-        alert("오늘의 활동이 기록되었습니다! 🔥");
-        refreshData();
-        // Update local log state immediately to reflect 'todayLog' existence if it was new
-        const logs = db.getLogsByMemberId(user.id);
-        const newLog = logs.find(l => l.date === selectedDate);
-        setTodayLog(newLog || null);
+            alert("오늘의 활동이 기록되었습니다! 🔥");
+            refreshData();
+            // Update local state is handled by refreshData for logs context, but we want immediate UI update for 'todayLog'
+            const logs = await db.getLogsByMemberId(user.id);
+            const newLog = logs.find(l => l.date === selectedDate);
+            setTodayLog(newLog || null);
+        } catch (error) {
+            console.error(error);
+            alert("저장 중 오류가 발생했습니다.");
+        }
     };
 
     if (!user) return null;

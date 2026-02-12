@@ -22,18 +22,17 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
     const [dietImageCount, setDietImageCount] = useState(0); // Mock
 
     useEffect(() => {
-        params.then(p_params => { // Renamed 'p' to 'urlParams' to avoid shadowing
+        params.then(async (p_params) => {
             setDate(p_params.date);
             if (user?.id) {
                 // Get Plan
-                const memberPlan = db.getPlanByMemberId(user.id); // Renamed 'p' to 'memberPlan'
+                const memberPlan = await db.getPlanByMemberId(user.id);
                 if (memberPlan) {
                     setPlan(memberPlan);
                 }
 
                 // Get Log
-                const logs = db.getLogsByMemberId(user.id);
-                // Use the date from URL params
+                const logs = await db.getLogsByMemberId(user.id);
                 const todayLog = logs.find(l => l.date === p_params.date);
                 if (todayLog) {
                     setLog(todayLog);
@@ -45,7 +44,7 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
         });
     }, [params, user]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user?.id || !date) return;
 
@@ -54,20 +53,26 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
             return;
         }
 
-        db.createLog({
-            memberId: user.id,
-            date: date,
-            dietImages: Array(dietImageCount).fill("mock-url"),
-            routineChecked,
-            memoir
-        });
+        try {
+            await db.createLog({
+                memberId: user.id,
+                date: date,
+                dietImages: Array(dietImageCount).fill("mock-url"),
+                routineChecked,
+                memoir
+            });
 
-        alert("오늘의 기록이 저장되었습니다!");
-        router.refresh(); // Or reload state
-        // Ideally reload data
-        const logs = db.getLogsByMemberId(user.id);
-        const todayLog = logs.find(l => l.date === date);
-        if (todayLog) setLog(todayLog);
+            alert("오늘의 기록이 저장되었습니다!");
+            router.refresh();
+
+            // Reload logs
+            const logs = await db.getLogsByMemberId(user.id);
+            const todayLog = logs.find(l => l.date === date);
+            if (todayLog) setLog(todayLog);
+        } catch (error) {
+            console.error(error);
+            alert("저장 중 오류가 발생했습니다.");
+        }
     };
 
     if (!date) return <div>Loading...</div>;
