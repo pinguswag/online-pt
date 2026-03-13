@@ -30,7 +30,120 @@ export interface DailyPlan {
     routine?: string;
 }
 
+export interface MemberConsultation {
+    id?: string;
+    coachId: string;
+    memberId: string;
+    name?: string;
+    registrationDate?: string;
+    ptCount?: number;
+    purpose?: string[];
+    targetWeight?: number;
+    targetBodyFat?: number;
+    targetStrength?: string;
+    qualitativeGoal?: string;
+    injuryArea?: string;
+    injuryTime?: string;
+    injuryPain?: boolean;
+    injuryPainIntensity?: number;
+    exerciseExperience?: string;
+    exerciseFrequency?: number;
+    fitnessSquat?: number;
+    fitnessPushup?: number;
+    fitnessLatpulldown?: number;
+    memberClassification?: string[];
+    classificationReason?: string;
+    curriculumDirection?: string;
+    curriculumDifficulty?: string;
+    curriculumInitialSplit?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
 export const db = {
+    // Consultations
+    getConsultation: async (coachId: string, memberId: string): Promise<MemberConsultation | null> => {
+        const { data, error } = await supabase
+            .from('member_consultations')
+            .select('*')
+            .eq('coach_id', coachId)
+            .eq('member_id', memberId)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw error;
+        }
+
+        return {
+            id: data.id,
+            coachId: data.coach_id,
+            memberId: data.member_id,
+            name: data.name,
+            registrationDate: data.registration_date,
+            ptCount: data.pt_count,
+            purpose: data.purpose,
+            targetWeight: data.target_weight,
+            targetBodyFat: data.target_body_fat,
+            targetStrength: data.target_strength,
+            qualitativeGoal: data.qualitative_goal,
+            injuryArea: data.injury_area,
+            injuryTime: data.injury_time,
+            injuryPain: data.injury_pain,
+            injuryPainIntensity: data.injury_pain_intensity,
+            exerciseExperience: data.exercise_experience,
+            exerciseFrequency: data.exercise_frequency,
+            fitnessSquat: data.fitness_squat,
+            fitnessPushup: data.fitness_pushup,
+            fitnessLatpulldown: data.fitness_latpulldown,
+            memberClassification: data.member_classification,
+            classificationReason: data.classification_reason,
+            curriculumDirection: data.curriculum_direction,
+            curriculumDifficulty: data.curriculum_difficulty,
+            curriculumInitialSplit: data.curriculum_initial_split,
+            createdAt: data.created_at,
+            updatedAt: data.updated_at
+        };
+    },
+
+    upsertConsultation: async (consultation: MemberConsultation) => {
+        const payload = {
+            coach_id: consultation.coachId,
+            member_id: consultation.memberId,
+            name: consultation.name,
+            registration_date: consultation.registrationDate,
+            pt_count: consultation.ptCount,
+            purpose: consultation.purpose,
+            target_weight: consultation.targetWeight,
+            target_body_fat: consultation.targetBodyFat,
+            target_strength: consultation.targetStrength,
+            qualitative_goal: consultation.qualitativeGoal,
+            injury_area: consultation.injuryArea,
+            injury_time: consultation.injuryTime,
+            injury_pain: consultation.injuryPain,
+            injury_pain_intensity: consultation.injuryPainIntensity,
+            exercise_experience: consultation.exerciseExperience,
+            exercise_frequency: consultation.exerciseFrequency,
+            fitness_squat: consultation.fitnessSquat,
+            fitness_pushup: consultation.fitnessPushup,
+            fitness_latpulldown: consultation.fitnessLatpulldown,
+            member_classification: consultation.memberClassification,
+            classification_reason: consultation.classificationReason,
+            curriculum_direction: consultation.curriculumDirection,
+            curriculum_difficulty: consultation.curriculumDifficulty,
+            curriculum_initial_split: consultation.curriculumInitialSplit
+        };
+
+        const { data, error } = await supabase
+            .from('member_consultations')
+            .upsert(payload, { onConflict: 'coach_id,member_id' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
     // Plans
     createPlan: async (plan: Omit<Plan, 'id' | 'createdAt'>) => {
         const { data, error } = await supabase

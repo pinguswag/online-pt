@@ -130,7 +130,12 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
                     ← 뒤로가기
                 </Button>
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{member.name} 회원님</h1>
-                <p style={{ color: 'var(--color-text-secondary)' }}>코칭 관리를 시작하세요.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <p style={{ color: 'var(--color-text-secondary)' }}>코칭 관리를 시작하세요.</p>
+                    <Button size="s" variant="secondary" onClick={() => router.push(`/coach/member/${memberId}/consultation`)}>
+                        상담 정보 입력/조회
+                    </Button>
+                </div>
             </header>
 
             {/* Daily Management Section (Main Focus) */}
