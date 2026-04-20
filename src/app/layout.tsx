@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const viewport: Viewport = {
   themeColor: "#0B132B",
@@ -30,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={cn("font-sans", geist.variable)}>
       <body suppressHydrationWarning>
         <div className="mobile-wrapper">
           <Providers>
