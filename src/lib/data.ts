@@ -89,12 +89,14 @@ export const db = {
             .select('*')
             .eq('coach_id', coachId)
             .eq('member_id', memberId)
-            .single();
+            .maybeSingle();
 
         if (error) {
             if (error.code === 'PGRST116') return null;
             throw error;
         }
+
+        if (!data) return null;
 
         return {
             id: data.id,
@@ -159,9 +161,10 @@ export const db = {
             .from('member_consultations')
             .upsert(payload, { onConflict: 'coach_id,member_id' })
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
+        if (!data) return null;
         return data;
     },
 
@@ -178,9 +181,10 @@ export const db = {
                 routine: plan.routine
             })
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
+        if (!data) return null;
         return {
             ...data,
             coachId: data.coach_id,
@@ -199,12 +203,14 @@ export const db = {
             .eq('member_id', memberId)
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
         if (error) {
             if (error.code === 'PGRST116') return null; // No rows found
             throw error;
         }
+
+        if (!data) return null;
 
         return {
             ...data,
@@ -233,9 +239,10 @@ export const db = {
                 status: 'submitted' // Default status
             })
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
+        if (!data) return null;
         return {
             ...data,
             memberId: data.member_id,
@@ -304,9 +311,10 @@ export const db = {
                 routine: dailyPlan.routine
             }, { onConflict: 'member_id,date' })
             .select()
-            .single();
+            .maybeSingle();
 
         if (error) throw error;
+        if (!data) return null;
         return {
             ...data,
             memberId: data.member_id,
@@ -320,12 +328,14 @@ export const db = {
             .select('*')
             .eq('member_id', memberId)
             .eq('date', date)
-            .single();
+            .maybeSingle();
 
         if (error) {
             if (error.code === 'PGRST116') return null;
             throw error;
         }
+
+        if (!data) return null;
 
         return {
             ...data,
@@ -340,18 +350,9 @@ export const db = {
             .from('users_profile')
             .select('*')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error) return null;
-
-        // Need to fetch email from auth.users? 
-        // Supabase client can't fetch other users' emails easily unless we use an admin function or public profile has it.
-        // For now, we will Mock username or store it in profile if needed.
-        // But the User interface needs username. 
-        // Let's assume username is the name/nickname for display, or we used email as username.
-        // The previous AuthContext fetched email from session.
-        // Here we might only have profile data.
-        // Let's return what we have.
+        if (error || !data) return null;
 
         return {
             id: data.id,

@@ -17,6 +17,15 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: defaultCache,
+    // Add ignoreURLParametersMatching to prevent SW from messing with Supabase queries
+    // or just exclude the domain entirely if Serwist supports it in runtimeCaching
+});
+
+// Add a specific rule to ignore Supabase
+self.addEventListener("fetch", (event) => {
+    if (event.request.url.includes("supabase.co")) {
+        return; // Let the browser handle it directly
+    }
 });
 
 serwist.addEventListeners();

@@ -18,7 +18,12 @@ export const auth = {
     getUsers: (): User[] => {
         if (typeof window === 'undefined') return [];
         const users = localStorage.getItem(USERS_KEY);
-        return users ? JSON.parse(users) : [];
+        try {
+            return users && users !== "undefined" ? JSON.parse(users) : [];
+        } catch (e) {
+            console.error("Auth: Failed to parse users from localStorage", e);
+            return [];
+        }
     },
 
     createUser: (user: Omit<User, 'id'>): User => {
@@ -60,7 +65,12 @@ export const auth = {
     getCurrentUser: (): User | null => {
         if (typeof window === 'undefined') return null;
         const session = localStorage.getItem(SESSION_KEY);
-        return session ? JSON.parse(session) : null;
+        try {
+            return session && session !== "undefined" ? JSON.parse(session) : null;
+        } catch (e) {
+            console.error("Auth: Failed to parse session from localStorage", e);
+            return null;
+        }
     },
 
     // Coach Specific

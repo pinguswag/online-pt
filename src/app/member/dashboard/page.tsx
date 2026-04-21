@@ -46,6 +46,7 @@ export default function MemberDashboard() {
     const [nutrition, setNutrition] = useState<NutritionData>({});
     const [todayWeight, setTodayWeight] = useState<number | "">("");
     const [memoir, setMemoir] = useState("");
+    const [exportSummary, setExportSummary] = useState({ workouts: 0, calories: 0 });
 
     const refreshData = async () => {
         if (!user?.id) return;
@@ -78,12 +79,30 @@ export default function MemberDashboard() {
     useEffect(() => {
         const updateDailyView = async () => {
             if (user?.id && selectedDate) {
-                const dPlan = await db.getDailyPlan(user.id, selectedDate);
-                setDailyPlan(dPlan);
+                try {
+                    const dPlan = await db.getDailyPlan(user.id, selectedDate);
+                    setDailyPlan(dPlan);
+                } catch (err) {
+                    console.error("Dashboard: Failed to load daily plan", err);
+                }
+
                 const log = allLogs.find(l => l.date === selectedDate);
                 setTodayLog(log || null);
-                setWorkouts(log?.workouts || []);
-                setNutrition(log?.nutrition || {});
+                
+                // Ensure we don't crash if log or its properties are malformed
+                setWorkouts(Array.isArray(log?.workouts) ? log.workouts : []);
+                setNutrition(log?.nutrition && typeof log.nutrition === 'object' ? log.nutrition : {});
+                
+                // Derived Stats for Export
+                if (log) {
+                    setExportSummary({
+                        workouts: log.workouts?.length || 0,
+                        calories: Object.values(log.nutrition || {}).reduce((sum: number, d: any) => sum + (d?.carbs * 4 + d?.protein * 4 + d?.fat * 9 || 0), 0)
+                    });
+                } else {
+                    setExportSummary({ workouts: 0, calories: 0 });
+                }
+
                 setMemoir(log?.memoir || "");
                 setTodayWeight(log?.weight || "");
 
@@ -133,14 +152,21 @@ export default function MemberDashboard() {
     const handleExportImage = async () => {
         if (!exportRef.current) return;
         try {
+            if (!exportRef.current) throw new Error("Export container not found");
             setIsExporting(true);
+
+            // Wait a moment for dynamic content to be fully ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const blob = await toBlob(exportRef.current, {
                 backgroundColor: "#09090b",
                 pixelRatio: 2,
+                cacheBust: true,
             });
-            if (!blob) throw new Error("이미지 생성에 실패했습니다.");
-            
-            const file = new File([blob], `OUNWAN_${selectedDate}.png`, { type: "image/png" });
+
+            if (!blob) throw new Error("Failed to generate image blob");
+
+            const file = new File([blob], `오운완_${selectedDate}.png`, { type: "image/png" });
             
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
@@ -179,7 +205,7 @@ export default function MemberDashboard() {
     };
 
     // Calculate Summary Status
-    const summary = useMemo(() => {
+    const dailySummary = useMemo(() => {
         let completedSets = 0;
         let totalSets = 0;
         workouts.forEach(w => w.sets.forEach(s => {
@@ -221,7 +247,7 @@ export default function MemberDashboard() {
                             <span className="text-white/80 text-sm font-medium">운동 진행률</span>
                             <CheckCircle2 className="w-5 h-5 text-white/50" />
                         </div>
-                        <div className="text-3xl font-bold">{summary.progress}%</div>
+                        <div className="text-3xl font-bold">{dailySummary.progress}%</div>
                     </CardContent>
                 </Card>
                 <Card className="bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-md border-0">
@@ -230,7 +256,7 @@ export default function MemberDashboard() {
                             <span className="text-white/80 text-sm font-medium">총 소모/섭취</span>
                             <Flame className="w-5 h-5 text-white/50" />
                         </div>
-                        <div className="text-3xl font-bold">{summary.calories} <span className="text-lg font-normal opacity-80">kcal</span></div>
+                        <div className="text-3xl font-bold">{dailySummary.calories} <span className="text-lg font-normal opacity-80">kcal</span></div>
                     </CardContent>
                 </Card>
             </div>
@@ -418,7 +444,7 @@ export default function MemberDashboard() {
                     </h3>
                     <div className="flex justify-between items-end">
                         <div>
-                            <p className="text-4xl font-black text-white">{summary.progress}%</p>
+                            <p className="text-4xl font-black text-white">{dailySummary.progress}%</p>
                         </div>
                         {todayWeight && (
                             <div className="text-right">
@@ -463,7 +489,7 @@ export default function MemberDashboard() {
                     </h3>
                     <div className="flex justify-between items-end">
                         <div>
-                            <p className="text-4xl font-black text-white">{summary.calories} <span className="text-xl font-normal text-zinc-500">kcal</span></p>
+                            <p className="text-4xl font-black text-white">{exportSummary.calories} <span className="text-xl font-normal text-zinc-500">kcal</span></p>
                         </div>
                     </div>
                 </div>
