@@ -11,6 +11,24 @@ export interface Plan {
     createdAt: string;
 }
 
+export interface WorkoutSet {
+    weight: number;
+    reps: number;
+    isCompleted: boolean;
+}
+
+export interface Workout {
+    name: string;
+    sets: WorkoutSet[];
+}
+
+export interface NutritionData {
+    breakfast?: { image?: string; memo?: string; carbs: number; protein: number; fat: number; };
+    lunch?: { image?: string; memo?: string; carbs: number; protein: number; fat: number; };
+    dinner?: { image?: string; memo?: string; carbs: number; protein: number; fat: number; };
+    snack?: { image?: string; memo?: string; carbs: number; protein: number; fat: number; };
+}
+
 export interface DailyLog {
     id: string;
     memberId: string;
@@ -20,6 +38,9 @@ export interface DailyLog {
     memoir: string;
     feedback?: string;
     score?: number; // 1-5
+    workouts?: Workout[];
+    nutrition?: NutritionData;
+    weight?: number;
 }
 
 export interface DailyPlan {
@@ -206,6 +227,9 @@ export const db = {
                 diet_photos: log.dietImages,
                 routine_checked: log.routineChecked,
                 memoir: log.memoir,
+                workouts: log.workouts || [],
+                nutrition: log.nutrition || {},
+                weight: log.weight || null,
                 status: 'submitted' // Default status
             })
             .select()
@@ -220,7 +244,10 @@ export const db = {
             routineChecked: data.routine_checked,
             memoir: data.memoir,
             feedback: data.feedback,
-            score: data.score
+            score: data.score,
+            workouts: data.workouts || [],
+            nutrition: data.nutrition || {},
+            weight: data.weight || undefined
         } as DailyLog;
     },
 
@@ -240,7 +267,10 @@ export const db = {
             routineChecked: log.routine_checked,
             memoir: log.memoir || "",
             feedback: log.feedback,
-            score: log.score
+            score: log.score,
+            workouts: log.workouts || [],
+            nutrition: log.nutrition || {},
+            weight: log.weight || undefined
         }));
     },
 
@@ -251,6 +281,9 @@ export const db = {
         if (updates.dietImages !== undefined) dbUpdates.diet_photos = updates.dietImages;
         if (updates.feedback !== undefined) dbUpdates.feedback = updates.feedback;
         if (updates.score !== undefined) dbUpdates.score = updates.score;
+        if (updates.workouts !== undefined) dbUpdates.workouts = updates.workouts;
+        if (updates.nutrition !== undefined) dbUpdates.nutrition = updates.nutrition;
+        if (updates.weight !== undefined) dbUpdates.weight = updates.weight;
 
         const { error } = await supabase
             .from('daily_logs')

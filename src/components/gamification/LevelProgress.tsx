@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 
 interface LevelProgressProps {
     currentLevel: { level: number; title: string };

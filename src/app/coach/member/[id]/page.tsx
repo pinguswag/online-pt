@@ -3,9 +3,9 @@
 import { useEffect, useState, use } from "react";
 import { User } from "@/lib/auth";
 import { db, Plan, DailyLog, DailyPlan } from "@/lib/data";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 
 // Next.js 15+ Params are async
@@ -126,13 +126,13 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
     return (
         <div style={{ padding: '24px', paddingBottom: '100px' }}>
             <header style={{ marginBottom: '24px' }}>
-                <Button size="s" variant="ghost" onClick={() => router.back()} style={{ paddingLeft: 0, marginBottom: '8px' }}>
+                <Button size="sm" variant="ghost" onClick={() => router.back()} style={{ paddingLeft: 0, marginBottom: '8px' }}>
                     ← 뒤로가기
                 </Button>
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{member.name} 회원님</h1>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                     <p style={{ color: 'var(--color-text-secondary)' }}>코칭 관리를 시작하세요.</p>
-                    <Button size="s" variant="secondary" onClick={() => router.push(`/coach/member/${memberId}/consultation`)}>
+                    <Button size="sm" variant="secondary" onClick={() => router.push(`/coach/member/${memberId}/consultation`)}>
                         상담 정보 입력/조회
                     </Button>
                 </div>
@@ -143,12 +143,15 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
                 <h3 style={{ fontWeight: '600', marginBottom: '16px', color: 'var(--color-primary)' }}>📅 일별 스케줄 관리</h3>
 
                 <div style={{ marginBottom: '24px' }}>
-                    <Input
+                    <div>
+    <label className="text-sm font-medium mb-1 block">날짜 선택</label>
+    <Input
                         type="date"
-                        label="날짜 선택"
+                        
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                     />
+</div>
                 </div>
 
                 <form onSubmit={handleSaveDaily} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -243,7 +246,7 @@ export default function CoachMemberDetail({ params }: { params: Promise<{ id: st
                         />
                     </div>
 
-                    <Button type="submit" variant="primary">
+                    <Button type="submit" variant="default">
                         {dailyPlan ? '일별 플랜 수정' : '일별 플랜 저장'}
                     </Button>
                 </form>
@@ -401,7 +404,7 @@ function LogItem({ log, onUpdate }: { log: DailyLog, onUpdate: () => void }) {
                             {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}점</option>)}
                         </select>
                     </div>
-                    <Button size="s" onClick={handleSave}>저장</Button>
+                    <Button size="sm" onClick={handleSave}>저장</Button>
                 </div>
             ) : (
                 <div style={{ background: '#EFF6FF', padding: '12px', borderRadius: '8px' }}>

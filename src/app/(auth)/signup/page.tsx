@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { UserRole } from "@/lib/auth";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -23,6 +23,11 @@ export default function SignupPage() {
 
         if (!name || !email || !password) {
             setError("모든 필드를 입력해주세요.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setError("비밀번호는 최소 6자 이상이어야 합니다.");
             return;
         }
 
@@ -69,7 +74,7 @@ export default function SignupPage() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Button
                         type="button"
-                        variant={role === 'member' ? 'primary' : 'secondary'}
+                        variant={role === 'member' ? 'default' : 'secondary'}
                         onClick={() => setRole('member')}
                         className="flex-1"
                     >
@@ -77,7 +82,7 @@ export default function SignupPage() {
                     </Button>
                     <Button
                         type="button"
-                        variant={role === 'coach' ? 'primary' : 'secondary'}
+                        variant={role === 'coach' ? 'default' : 'secondary'}
                         onClick={() => setRole('coach')}
                         className="flex-1"
                     >
@@ -85,30 +90,39 @@ export default function SignupPage() {
                     </Button>
                 </div>
 
-                <Input
-                    label="이름 (닉네임)"
+                <div>
+    <label className="text-sm font-medium mb-1 block">이름 (닉네임)</label>
+    <Input
+                    
                     placeholder="실명을 입력해주세요"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
-                <Input
-                    label="이메일"
+</div>
+                <div>
+    <label className="text-sm font-medium mb-1 block">이메일</label>
+    <Input
+                    
                     type="email"
                     placeholder="example@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
-                <Input
-                    label="비밀번호"
+</div>
+                <div>
+    <label className="text-sm font-medium mb-1 block">비밀번호</label>
+    <Input
+                    
                     type="password"
                     placeholder="6자 이상 입력해주세요"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
+</div>
 
                 {error && <p style={{ color: 'var(--color-danger)', fontSize: '14px' }}>{error}</p>}
 
-                <Button type="submit" size="l" variant="primary" style={{ marginTop: '16px' }} disabled={isLoading}>
+                <Button type="submit" size="lg" variant="default" style={{ marginTop: '16px' }} disabled={isLoading}>
                     {isLoading ? "가입 처리 중..." : "가입하기"}
                 </Button>
             </form>

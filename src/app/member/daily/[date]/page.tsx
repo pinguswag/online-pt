@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db, Plan, DailyLog } from "@/lib/data";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 
 export default function DailyPage({ params }: { params: Promise<{ date: string }> }) {
@@ -80,7 +80,7 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
     return (
         <div style={{ padding: '24px', paddingBottom: '100px' }}>
             <header style={{ marginBottom: '24px' }}>
-                <Button size="s" variant="ghost" onClick={() => router.push('/member/dashboard')} style={{ paddingLeft: 0, marginBottom: '8px' }}>
+                <Button size="sm" variant="ghost" onClick={() => router.push('/member/dashboard')} style={{ paddingLeft: 0, marginBottom: '8px' }}>
                     ← 홈으로
                 </Button>
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>{date}</h1>
@@ -143,11 +143,11 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
                         <div>
                             <p style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>식단 사진 (최대 5장)</p>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button type="button" size="s" variant="secondary" onClick={() => setDietImageCount(Math.min(5, dietImageCount + 1))}>
+                                <Button type="button" size="sm" variant="secondary" onClick={() => setDietImageCount(Math.min(5, dietImageCount + 1))}>
                                     사진 추가 ({dietImageCount}/5)
                                 </Button>
                                 {dietImageCount > 0 && (
-                                    <Button type="button" size="s" variant="ghost" onClick={() => setDietImageCount(0)}>초기화</Button>
+                                    <Button type="button" size="sm" variant="ghost" onClick={() => setDietImageCount(0)}>초기화</Button>
                                 )}
                             </div>
                         </div>
@@ -163,7 +163,7 @@ export default function DailyPage({ params }: { params: Promise<{ date: string }
                             />
                         </div>
 
-                        <Button type="submit" variant="primary" size="l">
+                        <Button type="submit" variant="default" size="lg">
                             기록 제출하기
                         </Button>
                     </form>

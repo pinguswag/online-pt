@@ -1,5 +1,5 @@
 import { Badge } from "@/lib/gamification";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 
 export function BadgeList({ badges }: { badges: Badge[] }) {
     return (

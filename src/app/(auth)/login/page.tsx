@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Link from "next/link";
 // import { supabase } from "@/lib/supabase"; // Removed direct usage
 import { useRouter } from "next/navigation";
@@ -62,24 +62,30 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <Input
-                    label="이메일"
+                <div>
+    <label className="text-sm font-medium mb-1 block">이메일</label>
+    <Input
+                    
                     type="email"
                     placeholder="example@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                 />
-                <Input
-                    label="비밀번호"
+</div>
+                <div>
+    <label className="text-sm font-medium mb-1 block">비밀번호</label>
+    <Input
+                    
                     type="password"
                     placeholder="비밀번호를 입력해주세요"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
+</div>
 
                 {error && <p style={{ color: 'var(--color-danger)', fontSize: '14px' }}>{error}</p>}
 
-                <Button type="submit" size="l" variant="primary" style={{ marginTop: '16px' }} disabled={isLoading}>
+                <Button type="submit" size="lg" variant="default" style={{ marginTop: '16px' }} disabled={isLoading}>
                     {isLoading ? "로그인 중..." : "로그인"}
                 </Button>
             </form>

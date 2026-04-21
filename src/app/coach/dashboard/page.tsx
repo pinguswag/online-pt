@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { User } from "@/lib/auth";
 import { db } from "@/lib/data"; // Use db instead of auth
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function CoachDashboard() {
     const { user, logout } = useAuth();
@@ -55,10 +55,10 @@ export default function CoachDashboard() {
                     <p style={{ color: 'var(--color-text-secondary)' }}>{members.length}명의 회원을 관리중입니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <Button size="s" variant="secondary" onClick={() => setIsAdding(!isAdding)}>
+                    <Button size="sm" variant="secondary" onClick={() => setIsAdding(!isAdding)}>
                         {isAdding ? '취소' : '추가'}
                     </Button>
-                    <Button size="s" variant="ghost" onClick={logout} style={{ color: 'var(--color-text-secondary)' }}>
+                    <Button size="sm" variant="ghost" onClick={logout} style={{ color: 'var(--color-text-secondary)' }}>
                         로그아웃
                     </Button>
                 </div>
@@ -67,13 +67,16 @@ export default function CoachDashboard() {
             {isAdding && (
                 <Card style={{ marginBottom: '24px' }}>
                     <form onSubmit={handleAddMember} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <Input
-                            label="회원 코드"
+                        <div>
+    <label className="text-sm font-medium mb-1 block">회원 코드</label>
+    <Input
+                            
                             placeholder="회원 코드를 입력하세요"
                             value={newMemberCode}
                             onChange={(e) => setNewMemberCode(e.target.value)}
-                            error={error}
                         />
+                        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+</div>
                         <Button type="submit">등록하기</Button>
                     </form>
                 </Card>
@@ -93,7 +96,7 @@ export default function CoachDashboard() {
                                     <h3 style={{ fontWeight: '600', fontSize: '16px' }}>{member.name}</h3>
                                     <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>@{member.username}</span>
                                 </div>
-                                <Button size="s" variant="secondary" onClick={() => window.location.href = `/coach/member/${member.id}`}>관리</Button>
+                                <Button size="sm" variant="secondary" onClick={() => window.location.href = `/coach/member/${member.id}`}>관리</Button>
                             </div>
                         </Card>
                     ))

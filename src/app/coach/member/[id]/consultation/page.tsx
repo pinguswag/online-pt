@@ -3,9 +3,9 @@
 import { useEffect, useState, use } from "react";
 import { User } from "@/lib/auth";
 import { db, MemberConsultation } from "@/lib/data";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
@@ -74,7 +74,7 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
     return (
         <div style={{ padding: '24px', paddingBottom: '100px', maxWidth: '600px', margin: '0 auto' }}>
             <header style={{ marginBottom: '24px' }}>
-                <Button size="s" variant="ghost" onClick={() => router.back()} style={{ paddingLeft: 0, marginBottom: '8px' }}>
+                <Button size="sm" variant="ghost" onClick={() => router.back()} style={{ paddingLeft: 0, marginBottom: '8px' }}>
                     ← 뒤로가기
                 </Button>
                 <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>회원 상담 정보</h1>
@@ -87,9 +87,18 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                 <Card>
                     <h3 style={{ fontWeight: 'bold', marginBottom: '16px', color: 'var(--color-primary)' }}>1. 회원 정보 입력</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <Input label="이름" value={consultation.name || ""} onChange={(e) => handleChange('name', e.target.value)} />
-                        <Input type="date" label="등록일" value={consultation.registrationDate || ""} onChange={(e) => handleChange('registrationDate', e.target.value)} />
-                        <Input type="number" label="PT 등록 횟수" value={consultation.ptCount || ""} onChange={(e) => handleChange('ptCount', parseInt(e.target.value) || 0)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">이름</label>
+    <Input  value={consultation.name || ""} onChange={(e) => handleChange('name', e.target.value)} />
+</div>
+                        <div>
+    <label className="text-sm font-medium mb-1 block">등록일</label>
+    <Input type="date"  value={consultation.registrationDate || ""} onChange={(e) => handleChange('registrationDate', e.target.value)} />
+</div>
+                        <div>
+    <label className="text-sm font-medium mb-1 block">PT 등록 횟수</label>
+    <Input type="number"  value={consultation.ptCount || ""} onChange={(e) => handleChange('ptCount', parseInt(e.target.value) || 0)} />
+</div>
                     </div>
                 </Card>
 
@@ -143,8 +152,14 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                     
                     <h4 style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '8px' }}>부상 이력</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-                        <Input label="부위" value={consultation.injuryArea || ""} onChange={(e) => handleChange('injuryArea', e.target.value)} />
-                        <Input label="시기" value={consultation.injuryTime || ""} onChange={(e) => handleChange('injuryTime', e.target.value)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">부위</label>
+    <Input  value={consultation.injuryArea || ""} onChange={(e) => handleChange('injuryArea', e.target.value)} />
+</div>
+                        <div>
+    <label className="text-sm font-medium mb-1 block">시기</label>
+    <Input  value={consultation.injuryTime || ""} onChange={(e) => handleChange('injuryTime', e.target.value)} />
+</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <label style={{ fontSize: '14px', fontWeight: '500' }}>현재 통증 여부</label>
                             <label style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -155,7 +170,10 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                             </label>
                         </div>
                         {consultation.injuryPain && (
-                            <Input type="number" label="통증 강도 (1-10)" min={1} max={10} value={consultation.injuryPainIntensity || ""} onChange={(e) => handleChange('injuryPainIntensity', parseInt(e.target.value))} />
+                            <div>
+    <label className="text-sm font-medium mb-1 block">통증 강도 (1-10)</label>
+    <Input type="number"  min={1} max={10} value={consultation.injuryPainIntensity || ""} onChange={(e) => handleChange('injuryPainIntensity', parseInt(e.target.value))} />
+</div>
                         )}
                     </div>
 
@@ -175,14 +193,26 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                                 <option value="고급">고급</option>
                             </select>
                         </div>
-                        <Input type="number" label="현재 운동 빈도 (주 회)" value={consultation.exerciseFrequency || ""} onChange={(e) => handleChange('exerciseFrequency', parseInt(e.target.value) || undefined)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">현재 운동 빈도 (주 회)</label>
+    <Input type="number"  value={consultation.exerciseFrequency || ""} onChange={(e) => handleChange('exerciseFrequency', parseInt(e.target.value) || undefined)} />
+</div>
                     </div>
 
                     <h4 style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '8px' }}>체력 수준 (초기 테스트)</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <Input type="number" label="스쿼트 (회)" value={consultation.fitnessSquat || ""} onChange={(e) => handleChange('fitnessSquat', parseInt(e.target.value) || undefined)} />
-                        <Input type="number" label="푸쉬업 (회)" value={consultation.fitnessPushup || ""} onChange={(e) => handleChange('fitnessPushup', parseInt(e.target.value) || undefined)} />
-                        <Input type="number" label="랫풀다운 (회)" value={consultation.fitnessLatpulldown || ""} onChange={(e) => handleChange('fitnessLatpulldown', parseInt(e.target.value) || undefined)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">스쿼트 (회)</label>
+    <Input type="number"  value={consultation.fitnessSquat || ""} onChange={(e) => handleChange('fitnessSquat', parseInt(e.target.value) || undefined)} />
+</div>
+                        <div>
+    <label className="text-sm font-medium mb-1 block">푸쉬업 (회)</label>
+    <Input type="number"  value={consultation.fitnessPushup || ""} onChange={(e) => handleChange('fitnessPushup', parseInt(e.target.value) || undefined)} />
+</div>
+                        <div>
+    <label className="text-sm font-medium mb-1 block">랫풀다운 (회)</label>
+    <Input type="number"  value={consultation.fitnessLatpulldown || ""} onChange={(e) => handleChange('fitnessLatpulldown', parseInt(e.target.value) || undefined)} />
+</div>
                     </div>
                 </Card>
 
@@ -214,7 +244,10 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                 <Card>
                     <h3 style={{ fontWeight: 'bold', marginBottom: '16px', color: 'var(--color-primary)' }}>5. 커리큘럼 설정</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <Input label="방향" value={consultation.curriculumDirection || ""} onChange={(e) => handleChange('curriculumDirection', e.target.value)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">방향</label>
+    <Input  value={consultation.curriculumDirection || ""} onChange={(e) => handleChange('curriculumDirection', e.target.value)} />
+</div>
                         <div>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>난이도</label>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -225,11 +258,14 @@ export default function ConsultationPage({ params }: { params: Promise<{ id: str
                                 ))}
                             </div>
                         </div>
-                        <Input label="초기 분할" value={consultation.curriculumInitialSplit || ""} onChange={(e) => handleChange('curriculumInitialSplit', e.target.value)} />
+                        <div>
+    <label className="text-sm font-medium mb-1 block">초기 분할</label>
+    <Input  value={consultation.curriculumInitialSplit || ""} onChange={(e) => handleChange('curriculumInitialSplit', e.target.value)} />
+</div>
                     </div>
                 </Card>
 
-                <Button type="submit" variant="primary" style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
+                <Button type="submit" variant="default" style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
                     상담 정보 저장
                 </Button>
             </form>
